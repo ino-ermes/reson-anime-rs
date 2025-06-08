@@ -29,13 +29,17 @@ def create_app():
     app.register_error_handler(HTTPException, default_http_handler)
     app.register_error_handler(Exception, default_handler)
 
-    # api/v1/recommend
+    # api/v1/recommends
     from flaskr.controllers.recommends import recommends_BP
 
     app.register_blueprint(recommends_BP)
 
-    # from flaskr.recommender.recommender import Recommender
+    from flaskr.recommender.retrieval import Retrieval
 
-    # Recommender.get_instance().load()
+    Retrieval.get_instance().load()
+
+    from flaskr.recommender.similar import Similar
+
+    Similar.get_instance()
 
     return app

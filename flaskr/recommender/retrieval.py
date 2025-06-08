@@ -5,6 +5,7 @@ import keras
 import json
 from threading import Lock, Thread
 from http import HTTPStatus
+import os
 
 
 class Rating(TypedDict):
@@ -39,6 +40,16 @@ class Retrieval:
         Retrieval.__instance = self
 
     def load(self):
+        if not os.path.isfile("data/index_to_book.json"):
+            print(f"No data file found at data/index_to_book.json. Starting fresh.")
+            return
+        if not os.path.isfile("data/user_to_index.json"):
+            print(f"No data file found at data/user_to_index.json. Starting fresh.")
+            return
+        if not os.path.isfile("data/model.keras"):
+            print(f"No data file found at data/model.keras. Starting fresh.")
+            return
+
         with open("data/index_to_book.json", "r") as f:
             index_to_book = json.load(f)
             index_to_book = {int(k): v for k, v in index_to_book.items()}
