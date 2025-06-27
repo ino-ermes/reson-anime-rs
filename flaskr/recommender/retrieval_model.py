@@ -32,7 +32,9 @@ class RetrievalModel(keras.Model):
             num_candidates, embedding_dimension
         )
         # The layer that performs the retrieval.
-        self.retrieval = keras_rs.layers.BruteForceRetrieval(k=10, return_scores=False)
+        self.retrieval = keras_rs.layers.BruteForceRetrieval(
+            k=num_candidates, return_scores=False
+        )
         self.loss_fn = keras.losses.MeanSquaredError()
 
         # Attributes.

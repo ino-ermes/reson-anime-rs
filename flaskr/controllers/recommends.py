@@ -25,10 +25,29 @@ def retrain():
     raise BadRequestError("きっとまた会えるさ")
 
 
+@recommends_BP.post("/similar/book/multi")
+@access_token_required
+def get_similars_avg():
+    data = request.get_json()
+
+    liked_books = data.get("liked_books", [])
+    top_n = data.get("top_n", 12)
+
+    if not liked_books or not isinstance(liked_books, list):
+        raise BadRequestError("liked_books must be a non-empty list")
+
+    similar = Similar.get_instance()
+    recommendations = similar.recommend_for_user(
+        liked_book_ids=liked_books, top_n=top_n
+    )
+
+    return recommendations
+
+
 @recommends_BP.get("/similar/book/<book>")
 @access_token_required
 def get_similars(book: str):
-    return Similar.get_instance().find_similar_books(book_id=book, top_n=10)
+    return Similar.get_instance().find_similar_books(book_id=book, top_n=12)
 
 
 @recommends_BP.post("/similar/book/init")

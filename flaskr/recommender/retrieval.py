@@ -97,13 +97,13 @@ class Retrieval:
                 ),
             )
             .shuffle(len(ratings), seed=42, reshuffle_each_iteration=False)
-            .batch(1000)
+            .batch(1)
             .cache()
         )
 
         model = RetrievalModel(users_count, books_count)
         model.compile(optimizer=keras.optimizers.Adagrad(learning_rate=0.1))
-        model.fit(dataset, epochs=100)
+        model.fit(dataset, epochs=10)
 
         model.save("data/model.keras")
         with open("data/index_to_book.json", "w") as f:
@@ -144,4 +144,6 @@ class Retrieval:
         )
         predictions = keras.ops.convert_to_numpy(predictions["predictions"])
 
-        return [model_hot_swap.index_to_book[book_idx] for book_idx in predictions[0]]
+        return [
+            model_hot_swap["index_to_book"].get(book_idx) for book_idx in predictions[0]
+        ]

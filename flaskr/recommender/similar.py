@@ -160,7 +160,7 @@ class Similar:
             # Save after updating
             self.save_data()
 
-    def find_similar_books(self, book_id: str, top_n: int = 10) -> List[str]:
+    def find_similar_books(self, book_id: str, top_n: int = 12) -> List[str]:
         """
         Find the most similar books to a given book ID. This is a read operation
         and can be concurrent, but locking provides consistency if data is being modified.
@@ -195,3 +195,58 @@ class Similar:
             ]
 
             return similar_book_ids
+
+    def recommend_for_user(
+        self, liked_book_ids: List[str], top_n: int = 12
+    ) -> List[str]:
+        """
+        Recommend books for a user based on their liked books using content-based filtering.
+
+        Args:
+            liked_book_ids: List of book IDs the user liked/read.
+            top_n: Number of recommendations to return.
+
+        Returns:
+            A list of recommended book IDs, excluding already liked ones.
+        """
+        with self._lock:
+            if not liked_book_ids:
+                print("No liked books provided for recommendation.")
+                return []
+
+            valid_indices = [
+                self.id_to_index.get(book_id)
+                for book_id in liked_book_ids
+                if book_id in self.id_to_index
+            ]
+
+            if not valid_indices:
+                print("No valid liked book IDs found in index.")
+                return []
+
+            # Get embeddings for the liked books
+            liked_embeddings = self.embeddings[valid_indices]
+
+            # Compute the user profile vector (mean of liked embeddings)
+            user_profile = np.mean(liked_embeddings, axis=0)
+
+            # Compute similarity with all books
+            similarities = cosine_similarity(
+                user_profile.reshape(1, -1), self.embeddings
+            )[0]
+
+            # Rank all books by similarity
+            ranked_indices = sorted(
+                enumerate(similarities), key=lambda x: x[1], reverse=True
+            )
+
+            # Exclude books the user has already liked
+            liked_index_set = set(valid_indices)
+            recommended_book_ids = []
+            for index, _ in ranked_indices:
+                if index not in liked_index_set:
+                    recommended_book_ids.append(self.index_to_id[index])
+                if len(recommended_book_ids) >= top_n:
+                    break
+
+            return recommended_book_ids
